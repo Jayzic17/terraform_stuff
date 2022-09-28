@@ -1,0 +1,10 @@
+#cloud-config
+
+# This is the configuration file for your cloud-init Provisioner (line 1 must always be: #cloud-config)!
+
+# Install apache, start it, and enable it
+packages:
+  - httpd
+runcmd:
+  - systemctl start httpd
+  - sudo systemctl emable httpd

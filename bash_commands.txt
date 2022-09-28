@@ -1,0 +1,147 @@
+terraform init [-upgrade, -get-plugins-false, -plugin-dir=path_name_, -lockfile=mode_name, -backend-config=backend.hcl, -reconfigure]
+    * initializes the project by pulling all dependencies needed to run the main.tf file
+    * creates:
+        * .terraform : binary file about our cloud provider
+        * .terraform.lock.hcl : dependency lock file
+        * .terraform directory
+        * .terraform-provider-[...] : contains information regarding the provider you're using
+        * .terraform/providers : directory for storing plugins for providers
+        * .terraform/modules : where terraform caches modules
+    * run 'terraform init' everytime dependencies change
+    * -upgrade : upgrade all plugins to latest version given your configuration constraints
+    * -get-plugins-false : skip plugin installation
+    * -plugin-dir : force plugin installation to read plugins only from target directory 
+    * -lockfile : set a dependency lockfile mode
+        * .terraform.lock.hcl : dependency lock file 
+        * .terraform.tfstate.lock.hcl : state lock file
+    * -backend-config : in cases where your backend of choice has dynamic settings that can't be expressed in a static file, you can use this for partial backend configuration
+    * -reconfigure : use this whenever you change your backend
+
+terraform fmt [-recursive]
+    * fixes the style and whitespacing to all .tf files in the current directory
+    * -recursive : also lets you validate and format files in sub-directories
+
+terraform validate
+    * compiles your file. Doesn't check things at runtime
+
+terraform plan [-out, -var=variable_name=some_value, -var-file filename.tfvars, -out=filename, -replace=resource_address, -refresh-only]
+    * runs terraform validate, then shows you all the configurations that main.tf is going to add/create 
+    * will also retrieve all the data from Providers necessary to run the resources you've provisioned from them
+    * '+' means creating something new, '~' means updating something in-place, '-' means something is being destroyed, '-/+' means resources whose arguments have changed but which cannot be updated in-place due to remote API limitations
+    * a 'terraform plan' file is a binary file, so you can't really read it 
+    * -out : lets you save the plan as a file ending in '.plan'
+    * -var : set the value of an already-defined input variable
+    * -var-file : specify which variable definition files you want to use
+    * -out : save the plan as a file with the name you specify ending with '.plan'
+    * -replace : replacement command for 'terraform taint', since 'terraform taint' has been deprecated 
+        * only works on 1 resource at a time
+    * -refresh-only : same as 'terraform refresh', except you would use this instead because 'refresh' was deprecated
+        * state file will match whatever's in the remote infrastructure, NOT THE OTHER WAY AROUND!
+
+terraform apply [-auto-approve, -destroy, -refresh-only, -var-file filename.tfvars, -out=filename, filename, -replace=resource_address]
+    * runs terraform validate, then terraform plan, followed by having you enter 'yes' to approve those changes to be made
+    * if a resource is successfully created but eventually fails during provisioning, the resource is marked as 'tainted'
+    * creates:
+        * terraform.tfstate : represents the current state of main.tf
+        * terraform.tfstate.backup : backup version of our terraform.tfstate
+    * -auto-approve : lets you bypass the approval step
+    * -destroy : same thing as 'terraform destory'; has an approval step as well
+    * -refresh-only : same as 'terraform refresh', except you would use this instead because 'refresh' was deprecated
+        * state file will match whatever's in the remote infrastructure, NOT THE OTHER WAY AROUND!
+    * -var-file : specify which variable definition files you want to use
+    * -out : save the plan as a file 
+    * filename : specify a specific 'terraform plan' file to run; doesn't ask you for approval
+    * -replace : replacement command for 'terraform taint', since 'terraform taint' has been deprecated 
+        * only works on 1 resource at a time 
+
+terraform output [output_variable_name, -json, -raw]
+    * prints out all output variables
+    * output_variable_name: specify a certain output variable to get its output
+    * -json : print the output in json format
+    * -raw : prints the output in raw format
+
+terraform refresh
+    * makes it so that the local state file matches whatever's in remote in terms of infrastructure
+    * deprecated command because it did not give you the ability to review proposed changes before updating the state file
+
+terraform destroy
+    * destroys all your infrastructure
+    * will prompt you for confirmation before destroying resources
+
+terraform workspace [list, show, select workspace_name, new workspace_name, delete workspace_name] 
+    * list : lists out all the available workspaces you're able to swtich to
+    * show : show the current workspace
+    * select : switch to a specified workspace 
+    * new : create and switch to a new workspace 
+    * delete : delete a specified workspace 
+
+terraform login
+    * lets you login with Terraform Cloud
+    * will ask you to download an API token and supply it to confirm authentification
+	* you can then use this API token for using the terraform CLI, which requires an API token in order to use it
+
+terraform providers
+    * gets a list of the current Providers your are using in your terraform application
+
+terraform console
+    * lets you use the console
+    * type 'exit' to exit the console
+
+terraform state [list, mv source_name destination_name, pull, push, replace-provider, rm resource_address, show resource_name]
+    * all subcommands of 'terraform state' that modify the state generate a terraform.tfstate.backup file
+    * all state files are stored in the 'terraform.tfstate.d' directory 
+    * list : list resources in the current state
+    * mv : move a resource into a module, move a module into a module, or rename resources
+    * pull : pull the current remote state to your local and output to stdout
+    * push : update remote state from a local state
+    * replace-provider : replace the provider of the current state
+    * rm : remove instances of 'resource_address' from the current state 
+    * show : show a resource in the current state
+
+terraform get
+    * download and update JUST modules in the root module
+
+terraform taint [resource_name]
+    * used to mark a resource for replacement the next time you run 'terraform apply'
+    * you would replace a resource for returning it back to a healthy state in the event it becomes damaged 
+ 
+terraform import [resource_address] [id]
+    * used to import existing resources from your cloud provider into terraform 
+    * can only import 1 resource at a time 
+    * not all resources are importable!
+
+TF_LOG=mode_name [TF_LOG_PATH=path_name] terraform apply
+    * lets you enable detailed logging based on the specified mode
+    * mode_name: TRACE, DEBUG, INFO, WARN, ERROR, JSON
+        * JSON : outputs logs at the TRACE level or higher, and uses parseable JSON encoding as the formatting
+        * TRACE(default) : most verbose, meaning it contains the most words
+    * TF_LOG_PATH : lets you set the path for where you want terraform logs written to
+
+TF_LOG_CORE=mode_name [TF_LOG_PATH=path_name] terraform apply
+    * lets you enable detailed core logging based on the specified mode
+    * mode_name: TRACE, DEBUG, INFO, WARN, ERROR, JSON
+        * JSON : outputs logs at the TRACE level or higher, and uses parseable JSON encoding as the formatting
+        * TRACE(default) : most verbose, meaning it contains the most words
+    * TF_LOG_PATH : lets you set the path for where you want terraform logs written to
+
+TF_LOG_PROVIDER=mode_name [TF_LOG_PATH=path_name] terraform apply
+    * lets you enable detailed provider logging based on the specified mode
+    * mode_name: TRACE, DEBUG, INFO, WARN, ERROR, JSON
+        * JSON : outputs logs at the TRACE level or higher, and uses parseable JSON encoding as the formatting
+        * TRACE(default) : most verbose, meaning it contains the most words
+    * TF_LOG_PATH : lets you set the path for where you want terraform logs written to
+
+terraform force-unlock unique_lock_ID [-force]
+    * lets you manually unlock a state file if unlocking fails; only recomended for unlocking your own lock when automatic unlocking fails
+    * -force : allows you to skip user confirmation
+
+terraform graph
+    * this outputs a GraphViz file (you'll need GraphViz installed)
+	* squares = Resource Node: represents a single resource
+	* circles = Resource Meta-Node: represents a group of resources, but no actions on its own
+	* diamonds = Provider Configuration Node: represents the time to fully configure a cloud provider
+
+terraform show [-json]
+    * shows the current state file in a more human-readable format 
+    * -json : shows the current state file in json machine-readable format
+        * any sensitive values in terraform state wil be displayed in plain text 

@@ -1,0 +1,500 @@
+
+
+terraform: an IaC tool that is Declarative, immutable, and Cloud Agnostic
+	* lets you automate creating, updating, or destroying cloud infrastructure
+	* configuration files are written in HashiCorp Configuration Language (HCL)
+		* HashiCorp Configuration Language (HCL): low-level language used for Terraform and can be used as an alternative syntax for JSON
+			* it's an open-source language for creating structured configuration languages for use with cmd line tools (EX: terraform, Packer, Vault, etc.)
+	* Declarative: explicit (what you see is what you get); 0 chance of misconfiguration; uses scripting languages like: JSON, YAML, and XML
+	* Imperative: implicit (you say what you want and the rest is filled in); can cause misconfiguration; does more than Declarative; uses programming languages like: Python, Ruby, and JavaScript
+	* terraform is Declarative with imperative-like functionality
+		* i.e, it uses Declarative languages like YAML, JSON, and XML, but also lets you do things like loops, maps, collections, etc.
+	* IaC: a blueprint of your cloud infrastructure
+		* lets you easily share, version, or inventory your cloud infrastructure
+problems with manual configuration:
+	* misconfigure something due to human error
+	* hard to keep up with compliance
+	* hard to KT configuration knowledge to others
+Infrastructure Lifecycle: work phases used by DevOps Engineers to plan, design, build, test, deliver, maintain, and retire cloud infrastructure
+	* IaC enhances the Infrastructure Lifecycle through:
+		* Reliability: IaC makes changes idempotent, consistent, repeatable, and predictable
+			* idempotent: no matter how many times you run it, it will always end up in the same state
+				* EX: script to provision and launch 2 VM's -> will always remain 2 VM's no matter how many times you run it (will just delete the old ones and launch the new ones)
+			* non-idempotent: state will change depending on how many times you run it
+				* EX: script to provision and launch 2 VM's -> end up with 4 VM's on the 2nd run (contains the 2 old VM's and the 2 new VM's)
+		* Manageability: enables mutation via code, and lets you revise with minimal changes
+		* Sensibility: avoid financial and reputational losses when considering government and military dependencies on infrastructure
+Day 0-2: simplified version of the Infrastructure Lifecycle
+	* Day 0: plan and design
+	* Day 1: develop and Iterate
+	* Day 2: go live and maintain
+Provisioning vs. Deployment vs. Orchestration:
+	* Provisioning: when you launch a server and configure it to host an application
+	* Deployment: delivering your application to the server
+	* Orchestration: EX: Kubernetes; the way in which you manage multiple servers
+Configuration Drift: when provisioned infrastructure has unexpected configuration change that doesn't follow your script, which can be caused by:
+	* team members manually adjusting
+	* malicious actors
+	* side affects from other software
+How to detect Configuration Drift:
+	* compliance tools that detect misconfiguration
+	* built-in support for Drift Detection
+	* storing the expected state in Terraform State files
+How to correct Configuration Drift:
+	* compliance tools that remediate misconfiguration
+	* Terraform 'refresh' and 'plan' commands
+	* manually correcting the configuration
+	* deleting and setting up the infrastructure again
+3 ways to resolve Drift:
+	* replacing resources: when a resource has become damaged and undetectable by terraform we can use the '-replace' flag
+	* importing resources: when an approved manual addition of a resource needs to be added to our state file we use the 'import' command
+	* refresh state: when an approved manual configuration of a resource has changed we use the '-refresh-only' flag to reflect the changes in our state file
+How to prevent Configuration Drift:
+	* Immutable Infrastructure: always create and destroy; never reuse (EX: Blue/Green Deployment)
+	* Using GitOps to version control IaC and review every PR
+Mutable vs Immutable:
+	* Mutable: being able to change the cloud infrastructure in some way
+	* Immutable: you're not allowed to change the cloud infrastructure in any way
+GitOps: Git versioning control of your IaC
+HashiCorp: company that supports the development and deployment of large-scale service-oriented software
+HahsiCorp Cloud Platform (HCP): platform used to access cloud agnostic products made by HashiCorp
+Workspaces: represents a unique environment
+	* 2 variants:
+		* CLI Workspaces: managing alternate state files locally or via remote backend
+		* Terraform Cloud Workspaces: acts like completely separate working directories
+	* by default, you work in the 'default' workspace, which can never be deleted
+	* locally, terraform state files are stored in a folder called: 'terraform.tfstate.d'
+	* remotely, terraform state files are stored directly in the configured backend
+	* Run Triggers: allow runs to queue automatically in your workspace on successful 'apply' of runs in any of the source workspaces
+		* you can connect up to 20 source workspaces 
+		* useful if one workspace is dependent on another
+	* remote Workspaces vs local Workspaces:
+		* terraform configuration is stored on disk (local) vs. stored in VCS repo or uploaded via CLI/API (remote)
+		* variable values are stored in .tfvars files (local) vs. in the workspace itself (remote)
+		* states are stored on disk vs. in the workspace itself (remote)
+		* credentials and secrets are stored in shell envs or entered at prompts (local) vs. in the workspace or stored as sensitive variables (remote)
+Terraform Cloud: a place to store and manage IaC in the cloud or with teams
+	* SaaS offering for:
+		* remote state storage
+		* version control integrations
+		* flexible workflows
+		* collaborate on infrastructure changes in a single unified web portal
+	* Terms:
+		* Organizations: an Organization is a collection of Workspaces
+		* Workspaces
+		* Teams: a collection of Users that can be assigned to Workspaces
+		* Runs: represents a single-run of the terraform environment that is operation on an execution plan (can be UI, API, or CLI driven)
+			* UI/VCS-driven: speculative plans are auto-triggered on PR creation and Runs are auto-triggered on mergers
+			* API-driven: you use a 3rd party tool to upload a new config file through Terraform Cloud API
+			* CLI-driven: Users run terraform CLI commands locally on their machines
+	* Organization-Level Permissions:
+		* Manage Policies
+		* Manage Policy Overrides
+		* Manage Workspaces
+		* Manage VCS Settings
+	* Organization Owners: admin-level access 
+		* they can publish private modules, invite users to their org, manage team membership, view all secret teams, etc.
+	* Workspace-Level Permissions:
+		* General Workspace Permissions: granular permissions you can apply to a user via custom workspace permissions:
+			* read and apply runs, queue plans, read and write variables and state versions, etc.
+		* Fixed Permission Sets: premade permissions for quick assignment:
+			* Read: read runs, variables, and state versions 
+			* Plan: queue plans, read variables and state versions 
+			* Write: apply runs, lock and unlock workspaces, read and write variables and state versions
+	* Workspace Admins:
+		* read and write workspace settings 
+		* set or remove workspace permissions of any team 
+		* delete workspaces 
+	* API Tokens: 3 types:
+		* Organization API Tokens:
+			* have permissions across the entire organization
+			* each Organization can have 1 valid API Token at a time 
+			* only Organization Owners can generate or revoke an Organization's token 
+			* Organization API tokens are designed for creating and configuring Workspaces and Teams 
+				* not recommended as an all-purpose interface to Terraform Cloud 
+		* Team API Tokens:
+			* allow access to the Workspaces that the team has access to w/o being tied to any specific User 
+			* each team can have 1 valid API Token at a time 
+			* any member of a team can generate or revoke that team's token 
+			* when a token is regenerated, the previous one immediately becomes invalid
+			* designed for performing API operations on Workspaces 
+			* same access level to the Workspaces the team has access to 
+		* User API Tokens:
+			* most flexible token type because they inherit permissions from the User they are associated with 
+			* could be for a real User or a Machine User
+	* Private Registry: is where you can publish private Modules for your Organization
+		* supports Module versioning, a searchable and filterable list of available Modules, and a Configuration Designer
+		* you can use either a User Token or a Team Token for authentication, but the type of token you choose may grant different permissions
+			* using 'terraform login' will obtain a User API Token
+			* ...to use a Team Token, you'll need to manually set it in your terraform CLI configuration file
+	* Cost Estimation: a feature in Terraform Cloud for getting a monthly cost of resources displayed alongside your runs
+		* available with Teams and Governance Plan and above
+		* only for AWS, Azure and GCP
+	* in Terraform Cloud, you can choose any version of terraform for a workspace, choose to share a state globally across your Organization, and choose to auto-approve runs 
+	* Terraform Cloud can integrate with VCS's such as Github, Bitbucket, and Azure DevOps
+	* when Terraform Cloud executes your terraform plan it runs them in its own run environment 
+		* it will inject the following environment variables automatically on each run:
+			* TFC_RUN_ID: a unique ID for the run 
+			* TFC_WORKSPACE_NAME
+			* TFC_WORKSPACE_SLUG: full slug of the configuration used in this run
+			* TFC_CONFIGURATION_VERSION_GIT_BRANCH
+			* TFC_CONFIGURATION_VERSION_GIT_COMMIT_SHA
+			* TFC_CONFIGURATION_VERSION_GIT_TAG
+		* you can access these environment variables by defining the variable by name in your terraform code 
+	* Terraform Cloud Agents: a paid feature of the Business Plan to allow Terraform Cloud to communicate with isolated, private, or on-prem infrastructure 
+		* the agent is pull-based, so no inbound connectivity is required 
+		* agents only support x86_64 Linux OS's 
+		* you can also run the agent within Docker using the official Terraform Agent Docker container 
+		* agents support terraform versions 0.12 and above 
+		* system requests at least 4GB of storage and 2GB of memory 
+		* it needs access to make outbound requests on HTTPS (TCP Port 443) to:
+			* app.terraform.io 
+			* registry.terraform.io 
+			* archivist.terraform.io
+			* releases.hashicorp.com
+	* Features and Pricing:
+		* Open-Source Software(OSS/CLI)(free): terraform(local only), local CLI, Community Support 
+		* Free($0 up to 5 Users): terraform, remote states, VCS Connection, workspace management, secure variable storage, remote runs, Private Module Registry, 1 run at a time, Terraform Cloud, Community Support 
+		* Teams and Governance($20/User/month): Free(2 runs at a time, Bronze Support) + Team Management, Sentinel Policy as Code Management, Cost Estimation 
+		* Business(contact sales): Teams and Governance(unlimited runs at a time, Silver and Gold Support) + SSO, audit logging, self-hosted agents, Configuration Designer, ServiceNow
+		* Self-Hosted(Enterprise)(contact sales): Business(minus self-hosted agents, Private) 
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Terraform Platform: the underlying software for Terraform Cloud and Terraform Enterprise
+Terraform Enterprise: a self-hosted distribution of Terraform Platform
+	* it's a private instance of the Terraform Platform application 
+	* no resource limits 
+	* it's a linux machine with Terraform Platform installed that has access to Postgres and cloud storage, and you can connect to it via TLS certificate
+		* you'll also need your license to be able to use the machine of course 
+	* requirements for Terraform Enterprise:
+		* choose your Operational Mode:
+			* External Services: Postgres, AWS S3, GCP Cloud Storage Bucket, Azure Blob Storage, Minio Object Storage
+			* Mounted Disk: store data on an external disk (EX: EBS)
+			* Demo: stores all the data on the instance; data can be backed up with snapshots
+		* Credentials:
+			* TLS certificate
+			* Terraform Enterprise License 
+		* OS and Hardware requirements:
+			* OS: debian, ubuntu, red hat, centOS, amazon linux, oracle linux
+			* hardware: 10GB of disk on root volume, 40GB of disk for Docker data, 8GB of memory, 4 CPU cores
+	* Air Gapped Environments: networks that are physically isolated from unsecured networks 
+		* Terraform Enterprise supports Air Gapped Environments through air gap bundles when you update your Terraform Enterprise
+features of terraform:
+	* installable modules
+	* plan changes
+	* dependency graphing
+	* state management
+	* provision infrastructure
+	* terraform registry with over 1000+ cloud providers
+state file features:
+	* the state file has sensitive data, so don't share it with anyone 
+	* when using the local state, the state file is stored in plain-text 
+	* storing the state file remotely can provide better security
+	* Terraform Cloud always encrypts the state file at rest when stored remotely
+	* the state file determines the correct order to destroy resources 
+	* increases the performance of provisioning resources
+	* the state file is required to run terraform; it cannot be disabled
+Terraform Lifecycle:
+	* Code: write your terraform config file
+	* 'init': initialize your project; pulling the latest cloud providers and modules
+	* 'validate': ensure types and values are valid, and ensure required attributes are present
+	* 'plan': see what will change OR generate and save an execution plan for later
+	* 'apply': execute the terraform plan and provision the infrastructure
+	* 'destroy': destroy the remote infrastructure
+Change Management: the process of applying changes and resolving conflicts brought about by change
+Change Automation: a way of automatically creating a consistent, systemic, and predictable way of managing change requests via controls and policies
+	* terraform uses Change Automation in the form of Execution Plans and Resource Graphs to apply and review complex ChangeSets
+	* ChangeSet: a collection of commits
+	* Change Automation allows you to know exactly what terraform will change and in what order, avoiding many possible human errors
+	* Execution Plans: a manual review of what will add, change, or destroy before you apply changes EX: 'terraform plan'
+		* resources and configuration settings will be listed
+		* a user must approve changes by typing: 'yes'
+		* you can visualize an Execution Plan as a dependency graph using: 'terraform graph'
+terraform use-cases:
+	* IaC for Exotic Providers: has 1000+ different cloud providers
+	* multi-tier applications: is useful at dividing up large complex apps into simple, highly flexible individual configuration scripts
+	* disposable environments: easy to stand up and delete temporary environments
+	* resource schedulers: can also be used to schedule time for resources in Docker, Hadoop, Spark, etc.
+	* Multi-Cloud Deployment: same script can be used with multiple cloud providers
+terraform is split into 2 main parts:
+	* Terraform Core: uses remote procedure calls (RPC) to communicate with Terraform Plugins
+	* Terraform Plugins: add-ons to terraform that allow you to implement a specific service
+Terraform Registry: essentially the documentation for calling everything in terraform
+	* is a website portal where you can browse, download, or publish available Providers or Modules
+	* everything published to Terraform Registry is public-facing
+Terraform Cloud Private Registry: Terraform Cloud allows you to publish private Modules for your organization
+	* need to connect to a version control system (ex: Git) and choose a repo in order to utilize it
+Terraform Provisioners: provisioners that install software, edit files, and provision machines using Terraform
+	* there are 2 options:
+		* cloud-init: uses provisioning tools like Chef and Puppet
+		* Packer: builds an image for you based on a config file you give it, and that image is delivered to a repo for use
+	* Terraform Provisioners should only be used as a last resort however, since they'll sometimes do things for you that you didn't intend
+	* terraform used to support 3rd party provisioning tools, but deprecated them because terraform considered using Terraform Provisioners to be poor practice
+Terraform Providers: terraform plugins that let you interact with cloud service providers, SaaS applications, and APIs 
+	* they are required for your terraform configuration file to work	
+	* come in 3 tiers:
+		* Official: owned and maintained by HashiCorp
+		* Verified: published by the company that owns the Provider; actively maintained, up-to-date, and compatible with both terraform and Provider
+			* the Verified Badge isn't always indicative of flexibility or feature support, cause you can still have unverified Modules that are really good; just hasn't been verified yet, or created by a HashiCorp partner
+		* Community: published by a community member but no guarantee of maintenance, up-to-dateness, or compatibility
+	* 'terraform init' will download the necessary Provider plugins listed in a terraform config file
+The Fine Line: understanding the granularities of responsibility between terraform IaC and 3rd party configuration tools like Ansible
+	* For example, if you're dealing with a Postgres DB, who should automate what?
+		* Terraform: would be responsible for tasks done once to setup the DB
+		* Ansible: would be responsible for repeatable tasks for on-going maintenance
+Hashicorp Configuration Files/Terraform Files: contains configuration information about Providers and resources
+	* can end in either .tf or .tf.json
+	* the terraform language consists of only 3 basic elements:
+		* Blocks: containers for objects
+			* Block Type: can have 0 or more labels and a body
+			* Block Label:  name of a Block
+		* Arguments
+		* Expressions
+		* <Block Type> "<Block Label>" "<Block Label>" {
+			# Block body
+			<Identifier> = <Expression>
+		}
+variable definition precedence:
+	* Environment variables
+	* terraform.tfvars
+	* terraform.tfvars.json
+	* *.auto.tfvars [or] *.auto.tfvars.json
+	* -var and -var-file command line arguments
+filesystem and workspace info:
+	* path.module : path of the module where the expression is placed
+	* path.root : path of the root module of the configuration
+	* path.cwd : path of the current working directory
+	* terraform.workspace : name of the currently selected workspace
+Implicit Element Ordering on Conversion: Since terraform can convert an unordered type (maps, objects, and sets) to an ordered type (list and tuples) it will need to choose an implied ordering 
+	* maps and objects: stored by key A-Z
+	* sets of strings: stored by string A-Z
+	* everything else: arbitrary ordering
+Semantic Versioning: standard for how to define version number (MAJOR.MINOR.PATCH)
+	* terraform uses this standard for versioning itself, Providers, and Modules
+	* MAJOR: when you make incompatible API changes
+	* MINOR: when you add functionality in a backwards compatible manner
+	* PATCH: when you make backwards compatible bug fixes
+Progressive Versioning: always stay up-to-date on the latest version; run nightly builds to alert developers in the morning of things that need to be updated 
+Lock File: files that only allow 1 user to edit them 
+Resource Addressing: string that identifies 0 or more resource instances 
+	* composed of 2 parts: [module_path] [resource_spec]
+		* [module_path]: module.module_name[module_index]
+			* module_name: user-defined name of the module
+				* EX: module "vpc" {
+					    ...
+					  }
+				* module_name = vpc
+			* module_index: when there are multiple instances (1-base index)
+		* [resource_spec]: resource_type.resource_name[instance_index]
+			* resource_type: the type of resource being addressed and resource_name: user-defined name of the resource
+				* EX: resource "aws_instance" "web" {
+						...
+					  }
+				* resource_type = aws_instance
+				* resource_name = web
+			* instance_index: when there are multiple instances (1-base index)
+backends that support locking:
+	* S3, AzureRM, Google Cloud Storage, Alibaba(TableStore), Swift, Tencent, Manta, Consul, etcdv3, postgres, kubernetes, http protocol
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+If terraform ever crashes, it will save a log file containing the Go runtime Panic message and backtrace to the crash.log log file, which is meant to be passed along to developers via a GitHub issue
+you can look for Modules by navigating to Terraform Registry, clicking 'Modules', and entering into the Search bar 
+Anyone can publish and share Modules on the Terraform Registry
+	* published Modules support:
+		* versioning
+		* automatically generated documentation
+		* allow for browsing version histories
+		* example code 
+		* READMEs
+	* repo names must be in the following format: terraform-<PROVIDER>-<NAME>
+	* public Modules are managed by a public Git repo on GitHub
+		* once registered, to push updates you simply push new versions to properly formed Git Tags
+			* you would do this with: 'git tag [version_number]' then: 'git push --tags'
+the standard module structure: 
+		- main.tf				-
+		- variables.tf			 |
+		- outputs.tf			 	 | - Root Module (required)
+		- README				 |
+		- LICENSE				-
+		- /modules				_
+			- /nestedA			 |
+				- README		 |
+				- variables.tf 	 |
+				- main.tf 		 |
+				- outputs.tf 	 |
+			- /nestedB			 |
+				.			 |
+				.			 |- Nested Module (optional)
+				.			 |
+			- /examples			 |
+				- /exampleA		 |
+					- main.tf	 | 
+				- /exampleB		 |
+					.		 |
+					.		 |
+					.		_
+the main terraform workflow has 3 main steps (described by different team formats):
+	* Individual Practitioner:
+		* Write
+			* you write your terraform in the editor of your choice
+			* you store your code in Github 
+			* you run 'terraform plan' and 'validate' to find syntax errors 
+			* very tight feedback loop btwn code changing and running tests 
+		* Plan 
+			* you commit your code to your local repo 
+			* most likely only a single branch is used 
+			* once your commit is written they'll proceed to Apply 
+		* Apply 
+			* you will run 'terraform apply' and be prompted to review the plan 
+			* after your final review you will approve the changes and await provisioning 
+			* after successful provisioning you will push your local commits to your remote repo 
+	* Team working with Open Source Software (OSS) 
+		* Write
+			* each team member will write code on their local with an editor of their choice 
+			* a team member will store their code in their own branch 
+			* 'terraform plan' can be used as a quick feedback loop for small teams 
+			* for larger teams, keeping credentials secret becomes a concern
+			* in Terraform OSS/CLI, the terraform state file is stored in the current working directory by default
+		* Plan 
+			* when a team member's branch is ready, they will make a PR and include the Execution Plan as part of the PR 
+		* Apply 
+			* once PR is approved and merged, the changes are applied by kicking off a build server that will run 'terraform apply'
+		* Note: while all this is happening, the DevOps Team would have to worry about stuff like:
+			* maintaining a CI/CD pipeline
+			* how to store the state file
+			* access controls for certain people
+			* securing secrets
+			* managing multiple environments
+	* Team working with Terraform Cloud
+		* Write
+			* the team will use Terraform Cloud as their remote backend
+			* Input Variables will be stored on Terraform Cloud (instead of local machines)
+			* Terraform Cloud integrates with your Version Control System (VCS) of choice to quickly setup a CI/CD pipeline
+			* a team member writes code to their own branch and commits as usual
+		* Plan
+			* a PR is made by a team member and Terraform Cloud will generate the Speculative Plan ('terraform plan') as part of the PR (team members can review and comment on the plan in Terraform Cloud)
+		* Apply
+			* after PR is merged, the Terraform Cloud runtime environment will perform a 'terraform apply' (a team member can confirm and apply the changes)
+terraform's backends are divided into 2 parts:
+	* Standard Backends: only stores terraform state; does not perform terraform operations 
+		* to perform operations, you would have to run it locally on the CLI 
+		* Standard Backends are the same as 3rd party backends (EX: AWS S3)
+		* most of the 3rd party backends include State Locking
+	* Enhanced Backends: can store terraform state AND perform terraform operations
+		* uses Terraform Cloud instead of 3rd party stuff 
+		* Enhanced Backends are subdivided further:
+			* local
+				* state file is stored in plain-text JSON file; don't commit or share this file!
+			* remote
+				* state file is stored in memory and encrypted at-rest and in-transit
+				* with a remote backend when 'terraform apply' is performed via the CLI, the Terraform Cloud Run Environment is responsible for executing the operation 
+				* ...because of this, your Provider credentials need to be configured in Environment Variables in Terraform Cloud 
+State Locking: this ensures that only 1 person is writing to a state file at a time
+	* State Locking happens automatically on all operations that could write to the state file. You won't see any message that it is happening if State Locking fails
+	* you can disable State Locking with the -lock flag for most commands, but it is not recommended
+	* terraform does not output when a lock is complete, but if acquiring the lock takes a long-ass time, terraform will output a status message
+Complex Types: a type that groups multiple values into a single value
+	* 2 categories:
+		* Collection Types: List, Map, Set
+			* values must be of the same type
+		* Structural Types: Tuple, Object
+			* values can be of any type
+			* object: {
+					name = "Jon"
+					age = 24
+				    }
+			* tuple: ["Jon", 24, true]
+Sentinel: policy-as-code tool for the Terraform Platform; payed service offered in the Team and Governance package
+	* features:
+		* embedded
+		* fine-grained, condition-based policy 
+		* multiple enforcement levels
+		* external information
+		* multi-cloud compatible 
+	* benefits of policy-as-code:
+		* sandboxing
+		* codification
+		* version control
+		* testing
+		* Automation
+	* Sentinel policies are written using the Sentinel language, has a CLI for deployment and testing, and has a testing framework for automation
+	* Sentinel runs before a configuration is applied, therefore potentially reducing cost for public cloud resources
+Packer: tool used to provision a build image that will be stored in a repo before actual deployment 
+	* configures a machine or container via a Packer Template, which use HCL 
+	* using a build image before you deploy gives you the following benefits:
+		* immutable infrastructure
+		* your VMs in your fleet are 1-1 in configuration 
+		* faster deploys to multiple servers after each build 
+		* earlier detection and intervention of package changes or deprecation of old technology 
+Consul: service networking platform
+	* provides:
+		* service discovery: central registry for services in the network; allows for direct communication; no single point of failure via load balancers
+		* service mesh: managing network traffic btwn services; a communication layer on top of your container application
+		* application configuration capabilities
+	* useful for service-oriented architectures
+	* Consul integrates with terraform in the following ways:
+		* remote backend: Consul has a key-value store to store configurations 
+		* Consul Provider 
+Vault: secret store 
+	* deployed to a server where:
+		* Vault admins can directly manage secrets 
+		* developers can access secrets via API 
+	* provides a unified interface to any secret: aws, google, azure, etc.
+	* Just-In-Time: reduces service attacks by only giving credentials to people the INSTANT they need them to login 
+	* Just-Enough Privilege: reduces service attacks by providing the least amount of privilege possible 
+	* Vault is deployed to VM's in a cluster and can be backed up into snapshots 
+	* Vault also records a detailed audit log for evidence of tampering with secrets 
+	* Vault can be used to inject short-lived secrets at the time of 'terraform apply' and then expire afterwards
+	* secrets are persisted to the state file when reading secrets from Vault using terraform, so be careful!
+Atlantis: lets you automate terraform PR's by automatically running 'terraform apply' when a PR is merged 
+CDK for Terraform: a CDK (Cloud Development Kit) that lets you generate terraform templates for any provider using either TypeScript, Python, Java, C#, or Go
+In order to reduce the time it takes to provision resources, Terraform uses parallelism
+	* By default, terraform will provision 10 resources concurrently during a 'terraform apply'
+terraform analyzes any expressions within a resource block to find references to other objects and treats those references as implicit ordering requirements when creating updating, or destroying resources
+terraform is available for the following OS's:
+	* macOS, Linux, Windows, Solaris, FreeBSD
+if a resource wasn't created using terraform (EX: it was created using the AWS console), then terraform doesn't know it's there till you import/refresh terraform 
+special filenames, keywords, and commands (also reference: bash_commands.txt and main.tf):
+	.tf
+	.tf.json
+	terraform.tfvars
+	terraform.tfvars.json
+	.auto.tfvars
+	.auto.tfvars.json
+	path.module
+	path.root
+	path.cwd
+	terraform.workspace
+	main.tf
+	variables.tf
+	outputs.tf
+	TF_VAR_
+	.terraformignore
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
